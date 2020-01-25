@@ -1,10 +1,10 @@
 import 'package:googleapis/drive/v3.dart' as v3;
 import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 
 String _randomString(int length) {
@@ -60,61 +60,19 @@ Future<void> downloadAllFilesInFolder(v3.DriveApi drive, String folderID) async 
   );
   await Future.wait(fileList.files.map((file) async {
       v3.Media mediaFile = await drive.files.get(file.id, downloadOptions: v3.DownloadOptions.FullMedia);
-      final saveFile = File('/storage/emulated/0/Download/${new DateTime.now().millisecondsSinceEpoch}.jpg');
+      Directory directory = (await getExternalStorageDirectory());
+      final saveFile = File('${directory.path}/${new DateTime.now().millisecondsSinceEpoch}.jpg');
       List<int> dataStore = [];
-      mediaFile.stream.listen((data) {
-        print("DataReceived: ${data.length}");
-        dataStore.insertAll(dataStore.length, data);
-      }, onDone: () {
-        print("Task Done");
-        saveFile.writeAsBytes(dataStore);
+
+      try {
+        await for(List<int> data in mediaFile.stream) {
+          dataStore.insertAll(dataStore.length, data);
+        }
+        await saveFile.writeAsBytes(dataStore);
         print("File saved at ${saveFile.path}");
-      }, onError: (error) {
-        print("Some Error");
-      });
-      return file;
-    }));
-}
+      } on Exception catch(_) {
 
-class ProgressHUD extends StatelessWidget {
+      }
 
-  final Widget child;
-  final bool inAsyncCall;
-  final double opacity;
-  final Color color;
-  final Animation<Color> valueColor;
-
-  ProgressHUD({
-    Key key,
-    @required this.child,
-    @required this.inAsyncCall,
-    this.opacity = 0.3,
-    this.color = Colors.grey,
-    this.valueColor,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> widgetList = new List<Widget>();
-    widgetList.add(child);
-    if (inAsyncCall) {
-      final modal = new Stack(
-        children: [
-          new Opacity(
-            opacity: opacity,
-            child: ModalBarrier(dismissible: false, color: color),
-          ),
-          new Center(
-            child: new CircularProgressIndicator(
-              valueColor: valueColor,
-            ),
-          ),
-        ],
-      );
-      widgetList.add(modal);
-    }
-    return Stack(
-      children: widgetList,
-    );
-  }
+  }));
 }
