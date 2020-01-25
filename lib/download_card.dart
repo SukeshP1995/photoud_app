@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +7,7 @@ import 'utils.dart';
 import 'constants.dart';
 
 class DownloadPage extends StatefulWidget{
-  DriveApi drive;
+  final DriveApi drive;
   DownloadPage({
     @required this.drive
   });
@@ -17,6 +15,7 @@ class DownloadPage extends StatefulWidget{
 }
 
 class _DownloadPageState extends State<DownloadPage> {
+  bool isLoading = false;
   DriveApi drive;
   _DownloadPageState({
     @required this.drive,
@@ -26,7 +25,9 @@ class _DownloadPageState extends State<DownloadPage> {
   DateTime currentDate = DateTime.now();
   @override
   Widget build(BuildContext context) {
-    return Form(
+    return isLoading ? Center(
+      child: CircularProgressIndicator(),
+    ) : Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -74,8 +75,11 @@ class _DownloadPageState extends State<DownloadPage> {
               onPressed: () async {
                 SnackBar snackBar;
                 if (_formKey.currentState.validate()) {
-                  // todo: Process data.
                   _formKey.currentState.save();
+                  setState(() {
+                    isLoading = true;
+                  });
+                  _formKey.currentState.reset();
                   String date = DateFormat('yyyy-MM-dd').format(currentDate);
                   print(date);
                   String dateID = '';
@@ -88,7 +92,6 @@ class _DownloadPageState extends State<DownloadPage> {
                       snackBar = SnackBar(
                         content: Text('Downloaded successfully')
                       );
-                      _formKey.currentState.reset();
                     } on RangeError catch(_) {
                       snackBar = SnackBar(
                         content: Text('No records for this sno')
@@ -99,6 +102,9 @@ class _DownloadPageState extends State<DownloadPage> {
                       content: Text('No records for this date')
                     );
                   }
+                  setState(() {
+                    isLoading = false;
+                  });
                 }
                 else {
                   snackBar = SnackBar(

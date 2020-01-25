@@ -25,7 +25,7 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  DriveApi drive;
+  final DriveApi drive;
   MyApp({
     @required this.drive,
   }): assert(drive != null);
@@ -84,19 +84,18 @@ const List<Choice> choices = const <Choice>[
 ];
 
 class ChoiceCard extends StatelessWidget {
-  DriveApi drive;
+  final DriveApi drive;
   ChoiceCard({Key key, this.drive, this.choice}) : super(key: key);
 
   final Choice choice;
 
   @override
   Widget build(BuildContext context) {
-    if (choice.title == 'Upload') {
+    if (choice.title == 'Upload')
       return UploadPage(drive: drive);
-    }
-    if (choice.title == 'Download') {
-      return DownloadPage(drive: drive,);
-    }
+
+    return DownloadPage(drive: drive,);
+
   }
 }
 

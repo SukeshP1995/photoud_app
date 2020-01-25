@@ -7,7 +7,7 @@ import 'utils.dart';
 import 'constants.dart';
 
 class UploadPage extends StatefulWidget{
-  DriveApi drive;
+  final DriveApi drive;
   UploadPage({
     @required this.drive
   });
@@ -17,6 +17,7 @@ class UploadPage extends StatefulWidget{
 }
 
 class _UploadPageState extends State<UploadPage> {
+  bool isLoading = false;
   DriveApi drive;
   _UploadPageState({
     @required this.drive,
@@ -27,7 +28,9 @@ class _UploadPageState extends State<UploadPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
+    return isLoading ? Center(
+      child: CircularProgressIndicator(),
+    ) : Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -67,11 +70,16 @@ class _UploadPageState extends State<UploadPage> {
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: RaisedButton(
               onPressed: () async {
+
                 SnackBar snackBar;
                 // Validate will return true if the form is valid, or false if
                 // the form is invalid.
                 if (_formKey.currentState.validate()) {
                   _formKey.currentState.save();
+                  _formKey.currentState.reset();
+                  setState(() {
+                    isLoading = true;
+                  });
                   String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
                   print(today);
                   String todayID = '';
@@ -91,7 +99,9 @@ class _UploadPageState extends State<UploadPage> {
                     content: Text('Uploaded successfully!')
                   );
                   images = List<Asset>();
-                  _formKey.currentState.reset();
+                  setState(() {
+                    isLoading = false;
+                  });
                 }
                 else {
                   snackBar = SnackBar(
