@@ -4,8 +4,9 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 String _randomString(int length) {
   var rand = new Random();
@@ -40,7 +41,7 @@ Future<String> searchFolderID(v3.DriveApi drive, String folderID, String subFold
 
 Future<String> uploadAsset(v3.DriveApi drive, Asset asset, String parent) async {
   String name = _randomString(10);
-  ByteData byteData = await asset.getByteData();
+  ByteData byteData = await asset.getByteData(quality: 30);
   List<int> imageData = byteData.buffer.asUint8List();
   Completer<List<int>> completer = Completer<List<int>>();
   completer.complete(imageData);
@@ -60,8 +61,8 @@ Future<void> downloadAllFilesInFolder(v3.DriveApi drive, String folderID) async 
   );
   await Future.wait(fileList.files.map((file) async {
       v3.Media mediaFile = await drive.files.get(file.id, downloadOptions: v3.DownloadOptions.FullMedia);
-      Directory directory = (await getExternalStorageDirectory());
-      final saveFile = File('${directory.path}/${new DateTime.now().millisecondsSinceEpoch}.jpg');
+      var appDocDir = await getTemporaryDirectory();
+      final saveFile = File('${appDocDir.path}/${new DateTime.now().millisecondsSinceEpoch}.jpg');
       List<int> dataStore = [];
 
       try {
@@ -70,8 +71,10 @@ Future<void> downloadAllFilesInFolder(v3.DriveApi drive, String folderID) async 
         }
         await saveFile.writeAsBytes(dataStore);
         print("File saved at ${saveFile.path}");
+        final result = await ImageGallerySaver.saveFile(saveFile.path);
+        print('hey');
+        print(result);
       } on Exception catch(_) {
-
       }
 
   }));
