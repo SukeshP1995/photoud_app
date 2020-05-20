@@ -5,6 +5,7 @@ import 'package:multi_image_picker/multi_image_picker.dart';
 import 'multi_image_form.dart';
 import 'utils.dart';
 import 'constants.dart';
+import 'package:datetime_picker_formfield/datetime_picker_formfield.dart';
 
 class UploadPage extends StatefulWidget{
   final DriveApi drive;
@@ -17,6 +18,7 @@ class UploadPage extends StatefulWidget{
 }
 
 class _UploadPageState extends State<UploadPage> {
+  DateTime currentDate = DateTime.now();
   bool isLoading = false;
   DriveApi drive;
   _UploadPageState({
@@ -30,7 +32,8 @@ class _UploadPageState extends State<UploadPage> {
   Widget build(BuildContext context) {
     return isLoading ? Center(
       child: CircularProgressIndicator(),
-    ) : Form(
+    ) :
+    Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -51,6 +54,21 @@ class _UploadPageState extends State<UploadPage> {
             },
             onSaved: (value) {
               sno = num.tryParse(value);
+            },
+          ),
+          Text('Pick date'),
+          DateTimeField(
+            format: DateFormat("yyyy-MM-dd"),
+            onShowPicker: (context, currentValue) {
+              return showDatePicker(
+                  context: context,
+                  firstDate: DateTime(1900),
+                  initialDate: currentValue ?? DateTime.now(),
+                  lastDate: DateTime(2100));
+            },
+            initialValue: DateTime.now(),
+            onSaved: (value) {
+              currentDate = value;
             },
           ),
           MultiImageFormField(
@@ -80,19 +98,19 @@ class _UploadPageState extends State<UploadPage> {
                   setState(() {
                     isLoading = true;
                   });
-                  String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-                  print(today);
-                  String todayID = '';
+                  String currentDateStr = DateFormat('yyyy-MM-dd').format(currentDate);
+                  print(currentDateStr);
+                  String folderID = '';
                   try {
-                    todayID = await searchFolderID(drive, PHOTOUD, today);
+                    folderID = await searchFolderID(drive, PHOTOUD, currentDateStr);
                   } on RangeError catch(_) {
-                    todayID = await createFolder(drive, today, PHOTOUD);
+                    folderID = await createFolder(drive, currentDateStr, PHOTOUD);
                   }
                   String snoID = '';
                   try {
-                    snoID = await searchFolderID(drive, todayID, sno.toString());
+                    snoID = await searchFolderID(drive, folderID, sno.toString());
                   } on RangeError catch(_) {
-                    snoID = await createFolder(drive, sno.toString(), todayID);
+                    snoID = await createFolder(drive, sno.toString(), folderID);
                   }
                   await Future.wait(images.map((image) async => uploadAsset(drive, image, snoID).then((value) => (value))));
                   snackBar = SnackBar(

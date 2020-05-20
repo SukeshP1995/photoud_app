@@ -4,6 +4,8 @@ import 'download_card.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() async {
   final accountCredentials = new ServiceAccountCredentials.fromJson(json.decode(json.encode(r'''
@@ -40,9 +42,93 @@ class _MyAppState extends State<MyApp> {
     @required this.drive
   });
 
+  final _formKey = GlobalKey<FormState>();
+
+  final key = 'M@n1@K_90854';
+
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+  bool valid = false;
+
+  String inputKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefs.then((SharedPreferences prefs) {
+
+      setState(() {
+        inputKey = prefs.getString('key') ?? '';
+        if (inputKey == key) {
+          valid = true;
+        }
+      });
+    });
+
+
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+
+    if (!valid)
+      return MaterialApp(
+      title: 'login',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('login'),
+        ),
+        body: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Text('Enter key.'),
+              TextFormField(
+                autovalidate: true,
+                decoration: const InputDecoration(
+                  hintText: 'key',
+                ),
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Please enter some text';
+                  }
+                  if (value != key) {
+                    return 'Please enter valid key';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  inputKey = value;
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: RaisedButton(
+                  onPressed: () {
+                    _prefs.then((SharedPreferences prefs) {
+                      prefs.setString('key', key).then((bool) {
+                        if (bool == true)
+                          setState(() {
+                            valid = true;
+                          });
+                      });
+                    });
+                    setState(() {
+                      valid = true;
+                    });
+                  },
+                  child: Text('Submit'),
+                ),
+              ),
+            ],
+          ),
+        )
+      ),
+    );
+    else
+      return MaterialApp(
       home: DefaultTabController(
         length: choices.length,
         child: Scaffold(

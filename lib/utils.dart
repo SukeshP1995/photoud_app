@@ -72,7 +72,6 @@ Future<void> downloadAllFilesInFolder(v3.DriveApi drive, String folderID) async 
         await saveFile.writeAsBytes(dataStore);
         print("File saved at ${saveFile.path}");
         final result = await ImageGallerySaver.saveFile(saveFile.path);
-        print('hey');
         print(result);
       } on Exception catch(_) {
       }
